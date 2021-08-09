@@ -77,33 +77,33 @@ pipeline {
 		  steps{
 		    script{
 			  dockerImage = docker.build registry + ":V$BUILD_NUBER"
-			}
+		    }
+		  }
+	}
+		
+	stage('Upload Image'){
+	  steps{
+	    script{
+		  docker.withRegistry('', registryCredential){
+		    dockerImage.push("V$BUILD_NUBER")
+		    dockerImage.push('latest')
 		  }
 		}
-		
-		stage('Upload Image'){
-		  steps{
-		    script{
-			  docker.withRegistry('', registryCredential){
-			    dockerImage.push("V$BUILD_NUBER")
-			    dockerImage.push('latest')
-			  }
-			}
-		  }
+	  }
+	}
+	
+	stage('Remove Unused Docker Images'){
+	  steps{
+	    sh "docker rmi $registry:V$BUILD_NUBER"
+	  }
+	}
+	
+	stage('Kubernetes Deploy'){
+	  agent{label 'KOPS'}
+	    steps{
+		  sh "helm upgrade --install --force vprofile-stack helm/vprofilecharts --set appimage=${registry}:V${BUILD_NUMBER} --namespace prod"
 		}
-		
-		stage('Remove Unused Docker Images'){
-		  steps{
-		    sh "docker rmi $registry:V$BUILD_NUBER"
-		  }
-		}
-		
-		stage('Kubernetes Deploy'){
-		  agent{label 'KOPS'}
-		    steps{
-			  sh "helm upgrade --install --force vprofile-stack helm/vprofilecharts --set appimage=${registry}:V${BUILD_NUMBER} --namespace prod"
-			}
-		}
+	}
 
 
     }
