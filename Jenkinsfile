@@ -81,10 +81,10 @@ pipeline {
 	  }
 	}
 		
-	stage('Upload Image'){
+	stage('Upload Image to DockerHub'){
 	  steps{
 	    script{
-              docker.withRegistry(' ', registryCredential){
+              docker.withRegistry('', registryCredential){
 		dockerImage.push("V$BUILD_ID")
 	        dockerImage.push('latest')
 	      }
